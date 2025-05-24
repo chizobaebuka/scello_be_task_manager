@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 
 // Error handling middleware
 export const errorHandler = (err: any, req: Request, res: Response, next: NextFunction) => {
-    console.error('❌ Error:', err);
+    console.error('Error:', err);
 
     if (res.headersSent) {
         return next(err);

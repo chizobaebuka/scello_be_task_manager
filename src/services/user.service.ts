@@ -21,14 +21,14 @@ export const createNewUser = async (data: CreateUserInput) => {
 };
 
 
-export const loginUserService = async (email: string, password: string): Promise<{ user: UserResponse; token: string }> => {
-    const user = await findUserByEmail(email);
+export const loginUserService = async (data: LoginUserInput): Promise<{ user: UserResponse; token: string }> => {
+    const user = await findUserByEmail(data.email);
 
     if (!user) {
         throw new Error('User not found');
     }
 
-    const isPasswordValid = await argon2.verify(user.password, password);
+    const isPasswordValid = await argon2.verify(user.password, data.password);
     if (!isPasswordValid) {
         throw new Error('Invalid password');
     }

@@ -1,6 +1,6 @@
 # Task Management System API
 
-A simple RESTful API for managing tasks, built with Node.js, Express.js, PostgreSQL, and Sequelize ORM. This project demonstrates clean code practices, authentication, error handling, and layered architecture (MVC).
+A simple Task Management RESTful API for managing tasks, built with Node.js, Express.js, Typescript, PostgreSQL, and Sequelize ORM. This project demonstrates clean code practices, authentication, error handling, and layered architecture (MVC).
 
 ---
 
@@ -11,7 +11,6 @@ A simple RESTful API for managing tasks, built with Node.js, Express.js, Postgre
 - [Project Structure](#project-structure)
 - [Setup Instructions](#setup-instructions)
 - [API Endpoints](#api-endpoints)
-- [Environment Variables](#environment-variables)
 
 ---
 

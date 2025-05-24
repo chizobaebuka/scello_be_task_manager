@@ -2,6 +2,7 @@
 import './config/env'; // Load .env first
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs/swagger';
 import userRoutes from './routes/user.routes';
@@ -14,6 +15,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(helmet());
 
 app.use((req, res, next) => {
     console.log(`Incoming request: ${req.method} ${req.url}`);

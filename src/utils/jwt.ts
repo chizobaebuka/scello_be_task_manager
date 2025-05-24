@@ -1,4 +1,4 @@
-import '../config/env'; // Must come before anything else
+import '../config/env';
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 
 const getJwtSecret = (): string => {
