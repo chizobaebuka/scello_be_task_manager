@@ -76,6 +76,7 @@ A simple Task Management RESTful API for managing tasks, built with Node.js, Exp
    npm run migrate
 
 5. **Start the Development Server**:
+   npm run build
    npm run dev
    PORT defined in your env
    The server will start at `http://localhost:${PORT}`.
