@@ -1,0 +1,18 @@
+// const path = require('path');
+
+// module.exports = {
+//     config: path.resolve('dist/config/sequelize-config.js'),
+//     'models-path': path.resolve('src/models'),
+//     'seeders-path': path.resolve('src/seeders'),
+//     'migrations-path': path.resolve('src/migrations')
+// };
+
+
+const path = require('path');
+
+module.exports = {
+    'config': path.resolve(__dirname, 'dist', 'config', 'config.js'),
+    'models-path': path.resolve(__dirname, 'dist', 'models'),
+    'seeders-path': path.resolve(__dirname, 'dist', 'seeders'),
+    'migrations-path': path.resolve(__dirname, 'dist', 'migrations'),
+};
