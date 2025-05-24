@@ -13,16 +13,27 @@ import {
 
 export const createTask = async (req: Request, res: Response): Promise<void> => {
     try {
-        const parsed = createTaskSchema.safeParse({ ...req.body, userId: req.user?.userId });
+        const parsed = createTaskSchema.safeParse(req.body);
         if (!parsed.success) {
             res.status(400).json({ message: parsed.error.errors[0].message });
             return;
         }
 
-        const task = await createNewTask(parsed.data);
+        // Ensure userId is included in the task data
+        if (!req.user?.userId) {
+            res.status(401).json({ message: 'User is not authenticated' });
+            return;
+        }
+
+        const taskData = {
+            ...parsed.data,
+            userId: req.user.userId,
+        };
+
+        const task = await createNewTask(taskData);
         res.status(201).json({ message: 'Task created', task });
     } catch (error: any) {
-        res.status(400).json({ message: error.message });
+        res.status(500).json({ message: error.message });
     }
 };
 
@@ -61,8 +72,12 @@ export const updateTask = async (req: Request, res: Response): Promise<void> => 
 
 export const deleteTask = async (req: Request, res: Response): Promise<void> => {
     try {
-        await removeTask(req.params.id, req.user?.userId!);
-        res.status(200).json({ message: 'Task deleted' });
+        const task = await removeTask(req.params.id, req.user?.userId!);
+        if (!task) {
+            res.status(404).json({ message: 'Task not found' });
+            return;
+        }
+        res.status(200).json({ message: 'Task deleted successfully' });
     } catch (error: any) {
         res.status(400).json({ message: error.message });
     }
