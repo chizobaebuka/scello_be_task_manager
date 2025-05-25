@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import {
     createTask,
     getTasks,
@@ -13,6 +13,7 @@ import * as taskService from '../../src/services/task.service';
 import Task from '../../src/models/task';
 import request from 'supertest';
 import app from '../../src/app'; // Assuming your Express app is exported from this file
+import { signToken } from '../../src/utils/jwt';
 
 // Extend the Request type to include the `user` property
 declare global {
@@ -25,12 +26,34 @@ declare global {
 
 jest.mock('../../src/services/task.service.ts');
 
+jest.mock('../../src/middlewares/auth.middleware.ts', () => ({
+    authenticate: (req: Request, res: Response, next: NextFunction) => {
+        req.user = { userId: 'user-123', email: 'user@example.com', role: 'user' }; // Mock user
+        next();
+    },
+}));
+
+const mockToken = signToken({
+    userId: 'user-123',
+    email: 'user@example.com',
+    role: 'user',
+})
+
 describe('Task Controller', () => {
     let req: Partial<Request>;
     let res: Partial<Response>;
 
     beforeEach(() => {
-        req = {};
+        req = {
+            body: {},
+            params: {},
+            query: {},
+            user: {
+                userId: 'user-123',
+                email: 'user1@example.com',
+                role: 'user',
+            } as AuthPayload, // Mock user object
+        };
         res = {
             status: jest.fn().mockReturnThis(),
             json: jest.fn(),
@@ -97,10 +120,6 @@ describe('Task Controller', () => {
                 message: expect.any(String)
             }));
         });
-
-        it('should return 200 upon sucessfully creating a tash', async () => {
-
-        })
     });
 
     describe('getTasks', () => {
@@ -240,3 +259,78 @@ describe('Task Controller', () => {
         });
     });
 });
+
+// import request from 'supertest';
+// import app from '../../src/app';
+// import * as taskService from '../../src/services/task.service';
+// import { signToken } from '../../src/utils/jwt';
+
+// jest.mock('../../src/services/task.service');
+
+// const mockUser = {
+//     id: 'user-123',
+//     name: 'John Doe',
+//     email: 'john.doe@example.com',
+//     role: 'user',
+//     createdAt: new Date().toISOString(),
+// };
+
+// const mockToken = signToken(
+//     mockUser,
+//     { expiresIn: '1h' }
+// );
+
+// describe('Task Controller - API Endpoints', () => {
+//     describe('POST /api/v1/tasks/create', () => {
+//         it('should create a task and return 201 status', async () => {
+//             const taskData = {
+//                 title: 'Test Task',
+//                 description: 'This is a test task',
+//                 status: 'pending',
+//             };
+
+//             const mockTask = {
+//                 id: 'task-123',
+//                 ...taskData,
+//                 userId: 'user-123',
+//                 createdAt: new Date().toISOString(),
+//                 updatedAt: new Date().toISOString(),
+//             };
+
+//             (taskService.createNewTask as jest.Mock).mockResolvedValue(mockTask);
+
+//             const response = await request(app)
+//                 .post('/api/v1/tasks/create')
+//                 .set('Authorization', `Bearer ${mockToken}`) // Mock token
+//                 .send(taskData)
+//                 .expect(201);
+
+//             expect(taskService.createNewTask).toHaveBeenCalledWith({
+//                 ...taskData,
+//                 userId: mockUser.id,
+//             });
+//             expect(response.body).toEqual({
+//                 message: 'Task created successfully',
+//                 task: mockTask,
+//             });
+//         });
+
+//         it('should return 400 when required fields are missing', async () => {
+//             const invalidTaskData = {
+//                 description: 'This is a test task without a title',
+//             };
+
+//             const response = await request(app)
+//                 .post('/api/v1/tasks/create')
+//                 .set('Authorization', `Bearer some-valid-token`)
+//                 .send(invalidTaskData)
+//                 .expect(400);
+
+//             expect(response.body).toEqual({
+//                 message: 'Required fields are missing or invalid',
+//             });
+//         });
+//     });
+
+//     // Additional tests for other endpoints can be added here
+// })

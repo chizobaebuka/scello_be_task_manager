@@ -13,7 +13,8 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
     try {
         const parsed = registerSchema.safeParse(req.body);
         if (!parsed.success) {
-            res.status(400).json({ message: parsed.error.errors[0].message });
+            const errorMessage = parsed.error.errors[0].message || 'Invalid input data';
+            res.status(400).json({ message: errorMessage });
             return;
         }
 
