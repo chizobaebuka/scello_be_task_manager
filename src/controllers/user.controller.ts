@@ -91,7 +91,13 @@ export const updateUser = async (req: Request, res: Response): Promise<void> => 
             return;
         }
 
-        const updated = await modifyUser(id, parsed.data);
+        const updates = { ...parsed.data };
+        if (req.user?.role !== 'admin') {
+            // Only admins may change roles; otherwise a user could self-promote via their own PUT.
+            delete updates.role;
+        }
+
+        const updated = await modifyUser(id, updates);
         res.status(200).json({
             message: 'User updated',
             data: updated

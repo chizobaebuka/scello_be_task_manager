@@ -1,5 +1,6 @@
 import express from 'express';
-import { authenticate } from '../middlewares/auth.middleware';
+import { authenticate, authorize, authorizeSelfOrRole } from '../middlewares/auth.middleware';
+import { authLimiter } from '../middlewares/errorhandler.middleware';
 import { createUser, deleteUser, getUserById, getUsers, loginUser, updateUser } from '../controllers/user.controller';
 
 
@@ -12,11 +13,11 @@ import { createUser, deleteUser, getUserById, getUsers, loginUser, updateUser } 
 
 const router = express.Router();
 
-router.post('/create', createUser);
-router.post('/login', loginUser)
-router.get('/', authenticate, getUsers);
-router.get('/:id', authenticate, getUserById);
-router.put('/:id', authenticate, updateUser);
-router.delete('/:id', authenticate, deleteUser);
+router.post('/create', authLimiter, createUser);
+router.post('/login', authLimiter, loginUser);
+router.get('/', authenticate, authorize(['admin']), getUsers);
+router.get('/:id', authenticate, authorizeSelfOrRole(['admin']), getUserById);
+router.put('/:id', authenticate, authorizeSelfOrRole(['admin']), updateUser);
+router.delete('/:id', authenticate, authorizeSelfOrRole(['admin']), deleteUser);
 
 export default router;

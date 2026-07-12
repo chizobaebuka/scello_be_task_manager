@@ -56,7 +56,7 @@ Task.init(
       allowNull: false,
     },
     description: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
     status: {
@@ -86,6 +86,11 @@ Task.init(
     modelName: 'Task',
     tableName: 'Tasks',
     timestamps: true,
+    indexes: [
+      { name: 'tasks_user_id_idx', fields: ['userId'] },
+      { name: 'tasks_user_id_status_idx', fields: ['userId', 'status'] },
+      { name: 'tasks_user_id_created_at_idx', fields: ['userId', 'createdAt'] },
+    ],
   }
 );
 

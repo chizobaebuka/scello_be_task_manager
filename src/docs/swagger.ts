@@ -121,8 +121,8 @@ const swaggerDefinition = {
         '/api/v1/users': {
             get: {
                 tags: ['Users'],
-                summary: 'Get all users',
-                description: 'Fetch all users with pagination, search, filtering, and sorting options.',
+                summary: 'Get all users (admin only)',
+                description: 'Fetch all users with pagination and sorting options. Requires the admin role.',
                 parameters: [
                     {
                         name: 'page',
@@ -135,13 +135,14 @@ const swaggerDefinition = {
                         },
                     },
                     {
-                        name: 'pageSize',
+                        name: 'limit',
                         in: 'query',
-                        description: 'Number of items per page',
+                        description: 'Items per page (capped at 100)',
                         required: false,
                         schema: {
                             type: 'integer',
                             default: 10,
+                            maximum: 100,
                         },
                     },
                     {
@@ -151,6 +152,7 @@ const swaggerDefinition = {
                         required: false,
                         schema: {
                             type: 'string',
+                            enum: ['createdAt', 'updatedAt', 'name', 'email'],
                             default: 'createdAt',
                         },
                     },
@@ -204,6 +206,9 @@ const swaggerDefinition = {
                     401: {
                         description: 'Unauthorized - JWT is invalid or missing',
                     },
+                    403: {
+                        description: 'Forbidden - caller is not an admin',
+                    },
                     500: {
                         description: 'Internal server error',
                     },
@@ -213,8 +218,8 @@ const swaggerDefinition = {
         '/api/v1/users/{id}': {
             get: {
                 tags: ['Users'],
-                summary: 'Get a user by ID',
-                description: 'Fetch a user by their ID',
+                summary: 'Get a user by ID (self or admin)',
+                description: 'Fetch a user by their ID. Callers may only fetch their own record unless they hold the admin role.',
                 parameters: [
                     {
                         name: 'id',
@@ -251,8 +256,8 @@ const swaggerDefinition = {
             },
             put: {
                 tags: ['Users'],
-                summary: 'Update a user by ID',
-                description: 'Update a user by their ID',
+                summary: 'Update a user by ID (self or admin)',
+                description: 'Update a user by their ID. Callers may only update their own record unless they hold the admin role; only admins may change the `role` field.',
                 parameters: [
                     {
                         in: 'path',
@@ -308,8 +313,8 @@ const swaggerDefinition = {
             },
             delete: {
                 tags: ['Users'],
-                summary: 'Delete a user by ID',
-                description: 'Delete a user by their ID',
+                summary: 'Delete a user by ID (self or admin)',
+                description: 'Delete a user by their ID. Callers may only delete their own record unless they hold the admin role.',
                 parameters: [
                     {
                         name: 'id',
@@ -404,13 +409,14 @@ const swaggerDefinition = {
                         },
                     },
                     {
-                        name: 'pageSize',
+                        name: 'limit',
                         in: 'query',
-                        description: 'Number of items per page',
+                        description: 'Items per page (capped at 100)',
                         required: false,
                         schema: {
                             type: 'integer',
                             default: 10,
+                            maximum: 100,
                         },
                     },
                     {
@@ -420,6 +426,7 @@ const swaggerDefinition = {
                         required: false,
                         schema: {
                             type: 'string',
+                            enum: ['createdAt', 'updatedAt', 'title', 'status', 'startTime', 'endTime'],
                             default: 'createdAt',
                         },
                     },
@@ -708,16 +715,16 @@ const swaggerDefinition = {
         schemas: {
             User: {
                 type: 'object',
+                description: 'Public user representation. The password hash is never returned by the API.',
                 properties: {
                     id: { type: 'string', format: 'uuid', example: '123e4567-e89b-12d3-a456-426614174000' },
                     name: { type: 'string', example: 'John Doe' },
                     email: { type: 'string', example: 'john.doe@example.com' },
-                    password: { type: 'string', example: 'hashedpassword' },
                     role: { type: 'string', enum: ['user', 'admin'], example: 'admin', default: 'user' },
                     createdAt: { type: 'string', format: 'date-time' },
                     updatedAt: { type: 'string', format: 'date-time' },
                 },
-                required: ['name', 'email', 'password', 'role'],
+                required: ['name', 'email', 'role'],
             },
             Task: {
                 type: 'object',

@@ -7,9 +7,20 @@ import {
     getAllUsers,
     updateUserById,
 } from '../repositories/user.repository';
-import { getPagination, getPaginationMeta } from '../interfaces/pagination.interface';
+import { getPagination, getPaginationMeta, resolveSort } from '../interfaces/pagination.interface';
 import { AuthPayload, CreateUserInput, LoginUserInput, UserResponse } from '../interfaces/user.interface';
 import { signToken } from '../utils/jwt';
+
+const USER_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'name', 'email'] as const;
+
+// Never let a raw model instance (which carries the password hash) escape the service layer.
+const toUserResponse = (user: any): UserResponse => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    createdAt: user.createdAt,
+});
 
 export const createNewUser = async (data: CreateUserInput) => {
     const existing = await findUserByEmail(data.email);
@@ -17,7 +28,8 @@ export const createNewUser = async (data: CreateUserInput) => {
 
     const hashedPassword = await argon2.hash(data.password);
 
-    return await createUser({ ...data, password: hashedPassword });
+    const user = await createUser({ ...data, password: hashedPassword });
+    return toUserResponse(user);
 };
 
 
@@ -41,42 +53,38 @@ export const loginUserService = async (data: LoginUserInput): Promise<{ user: Us
 
     const token = signToken(payload, { expiresIn: '3h' });
 
-    const userResponse: UserResponse = {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        createdAt: user.createdAt!,
-    };
-
-    return { user: userResponse, token };
+    return { user: toUserResponse(user), token };
 };
 
 export const fetchUsers = async (query: any) => {
     const { offset, limit, currentPage } = getPagination(query);
-    const sortBy = query.sortBy || 'createdAt';
-    const sortOrder = query.sortOrder === 'ASC' ? 'ASC' : 'DESC';
+    const { sortBy, sortOrder } = resolveSort(query, USER_SORTABLE_FIELDS, 'createdAt');
 
     const { count, rows } = await getAllUsers(offset, limit, sortBy, sortOrder);
     const pagination = getPaginationMeta(count, currentPage, limit, rows.length);
 
-    return { pagination, items: rows };
+    return { pagination, items: rows.map(toUserResponse) };
 };
 
 export const fetchUserById = async (id: string) => {
     const user = await findUserById(id);
     if (!user) throw new Error('User not found');
-    return user;
+    return toUserResponse(user);
 };
 
 export const modifyUser = async (id: string, updates: Partial<CreateUserInput>) => {
-    const updated = await updateUserById(id, updates);
+    const payload = { ...updates };
+    if (payload.password) {
+        payload.password = await argon2.hash(payload.password);
+    }
+
+    const updated = await updateUserById(id, payload);
     if (!updated) throw new Error('User not found');
-    return updated;
+    return toUserResponse(updated);
 };
 
 export const removeUser = async (id: string) => {
     const user = await deleteUserById(id);
     if (!user) throw new Error('User not found');
-    return user;
+    return toUserResponse(user);
 };

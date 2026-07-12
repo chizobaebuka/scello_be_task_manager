@@ -21,9 +21,14 @@ export interface PaginatedMeta {
     prevPage: number | null;
 }
 
-export function getPagination({ page = 1, limit = 10 }: PaginationParams): PaginationOptions {
+export const DEFAULT_LIMIT = 10;
+export const MAX_LIMIT = 100;
+
+export function getPagination({ page = 1, limit = DEFAULT_LIMIT }: PaginationParams): PaginationOptions {
     const safePage = Math.max(1, Number(page) || 1);
-    const safeLimit = Math.max(1, Number(limit) || 10);
+    const requestedLimit = Number(limit) || DEFAULT_LIMIT;
+    // Capped so a client can't force an unbounded table scan / huge payload via ?limit=.
+    const safeLimit = Math.min(MAX_LIMIT, Math.max(1, requestedLimit));
     const offset = (safePage - 1) * safeLimit;
 
     return {
@@ -31,6 +36,25 @@ export function getPagination({ page = 1, limit = 10 }: PaginationParams): Pagin
         limit: safeLimit,
         currentPage: safePage,
     };
+}
+
+export interface SortParams {
+    sortBy: string;
+    sortOrder: 'ASC' | 'DESC';
+}
+
+// Only allows sorting on a known-safe column list, since sortBy/sortOrder are
+// otherwise passed straight into a Sequelize ORDER BY clause.
+export function resolveSort(
+    query: { sortBy?: unknown; sortOrder?: unknown },
+    allowedFields: readonly string[],
+    defaultField: string
+): SortParams {
+    const requested = typeof query.sortBy === 'string' ? query.sortBy : undefined;
+    const sortBy = requested && allowedFields.includes(requested) ? requested : defaultField;
+    const sortOrder: 'ASC' | 'DESC' = query.sortOrder === 'ASC' ? 'ASC' : 'DESC';
+
+    return { sortBy, sortOrder };
 }
 
 export function getPaginationMeta(

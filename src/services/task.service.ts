@@ -8,7 +8,9 @@ import {
     getTaskCompletionReport,
 } from '../repositories/task.repository';
 import { CreateTaskInput, UpdateTaskInput } from '../interfaces/task.interface';
-import { getPagination, getPaginationMeta } from '../interfaces/pagination.interface';
+import { getPagination, getPaginationMeta, resolveSort } from '../interfaces/pagination.interface';
+
+const TASK_SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'title', 'status', 'startTime', 'endTime'] as const;
 
 const createNewTask = async (data: CreateTaskInput) => {
     return await createTask(data);
@@ -16,8 +18,7 @@ const createNewTask = async (data: CreateTaskInput) => {
 
 const fetchAllTasks = async (userId: string, query: any) => {
     const { offset, limit, currentPage } = getPagination(query);
-    const sortBy = query.sortBy || 'createdAt';
-    const sortOrder = query.sortOrder === 'ASC' ? 'ASC' : 'DESC';
+    const { sortBy, sortOrder } = resolveSort(query, TASK_SORTABLE_FIELDS, 'createdAt');
 
     const { count, rows } = await getAllTasksByUser(userId, offset, limit, sortBy, sortOrder);
     const pagination = getPaginationMeta(count, currentPage, limit, rows.length);
